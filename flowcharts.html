@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeliverPin - System Flowcharts</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --container-bg: #161b22;
+            --border-color: #30363d;
+        }
+        
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-color: #f6f8fa;
+                --text-color: #24292f;
+                --container-bg: #ffffff;
+                --border-color: #d0d7de;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .diagram-section {
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #58a6ff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        .print-btn {
+            display: block;
+            width: 200px;
+            margin: 0 auto 40px;
+            padding: 12px 24px;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .print-btn:hover {
+            background-color: #2ea043;
+        }
+
+        @media print {
+            body { 
+                background: white; 
+                color: black;
+                padding: 0;
+            }
+            .container { max-width: 100%; }
+            .diagram-section {
+                break-inside: avoid;
+                box-shadow: none;
+                border: none;
+                margin-bottom: 20px;
+            }
+            .print-btn { display: none; }
+            h2 { color: #000; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+            securityLevel: 'loose'
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>DeliverPin — System Flowcharts & Workflow</h1>
+        
+        <button class="print-btn" onclick="window.print()">🖨️ Print or Save as PDF</button>
+
+        <div class="diagram-section">
+            <h2>Complete System Flow</h2>
+            <div class="mermaid">
+flowchart TD
+    A["🛒 Customer Places Order\n(Existing App)"] --> B["🤖 System Detects New Order\n(Status: PENDING_LOCATION)"]
+    B --> C["💬 WhatsApp Bot Sends\nMagic Link to Customer"]
+    C --> D{"📱 Customer\nOpens Link?"}
+    
+    D -->|Yes| E["🗺️ Map Page Opens\n(Auto-auth via token)"]
+    D -->|No| F["⏰ Send Reminder\nAfter 5 mins"]
+    F --> D
+    
+    E --> G{"📍 Location\nMethod?"}
+    G -->|GPS| H["📡 Use My Location\n(Browser Geolocation)"]
+    G -->|Manual| I["👆 Drag Pin\non Map"]
+    
+    H --> J["🏠 Reverse Geocoding\n(Nominatim → Address)"]
+    I --> J
+    
+    J --> K["✅ Customer Confirms\nDelivery Location"]
+    K --> L["💾 Save lat/lng + address\n(Status: LOCATION_CONFIRMED)"]
+    
+    L --> M["🧑‍💼 Admin Sees Order\non Dashboard"]
+    M --> N["🗺️ Admin Views Pin\non Map"]
+    N --> O["🛵 Admin Assigns\nDelivery Partner"]
+    O --> P["📲 WhatsApp Sends\nGoogle Maps Link to Partner"]
+    P --> Q["💾 Status: ASSIGNED"]
+    
+    Q --> R["🛵 Partner Navigates\nvia Google Maps"]
+    R --> S["📦 Partner Delivers"]
+    S --> T["✅ Mark Delivered\n(Status: DELIVERED)"]
+    T --> U["💬 WhatsApp Confirms\nDelivery to Customer"]
+
+    style A fill:#6C63FF,color:#fff,stroke:none
+    style K fill:#10B981,color:#fff,stroke:none
+    style T fill:#10B981,color:#fff,stroke:none
+    style C fill:#25D366,color:#fff,stroke:none
+    style P fill:#25D366,color:#fff,stroke:none
+    style U fill:#25D366,color:#fff,stroke:none
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h2>Order Status Lifecycle</h2>
+            <div class="mermaid">
+stateDiagram-v2
+    [*] --> PENDING_LOCATION: Order Created
+    PENDING_LOCATION --> LOCATION_CONFIRMED: Customer Sets Pin
+    LOCATION_CONFIRMED --> ASSIGNED: Admin Assigns Partner
+    ASSIGNED --> OUT_FOR_DELIVERY: Partner Picks Up
+    OUT_FOR_DELIVERY --> DELIVERED: Partner Confirms
+    DELIVERED --> [*]
+
+    PENDING_LOCATION: ⏳ Waiting for customer\nto set delivery pin
+    LOCATION_CONFIRMED: 📍 Location received\nReady for assignment
+    ASSIGNED: 🚚 Partner assigned\nAwaiting pickup
+    OUT_FOR_DELIVERY: 🛵 Partner en route\nto customer
+    DELIVERED: ✅ Order delivered\nCompleted
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h2>System Architecture</h2>
+            <div class="mermaid">
+flowchart LR
+    subgraph Customer["📱 Customer"]
+        CApp["Existing\nOrder App"]
+        CWeb["DeliverPin\nWeb Page"]
+    end
+
+    subgraph WhatsApp["💬 WhatsApp"]
+        WBot["WhatsApp\nBot/Links"]
+    end
+
+    subgraph Backend["⚙️ Node.js Backend"]
+        API["Express\nAPI Server"]
+        DB["In-Memory\nDatabase"]
+    end
+
+    subgraph Admin["🧑‍💼 Admin"]
+        ADash["Admin\nDashboard"]
+        AMap["Map View\n(Leaflet)"]
+    end
+
+    subgraph Delivery["🛵 Delivery Partner"]
+        DPage["Partner\nPage"]
+        GMaps["Google Maps\nNavigation"]
+    end
+
+    CApp -->|"Order placed"| API
+    API -->|"Magic link"| WBot
+    WBot -->|"📩 Link"| CWeb
+    CWeb -->|"lat/lng + address"| API
+    API -->|"Store"| DB
+    
+    ADash -->|"Fetch orders"| API
+    AMap -->|"Show pins"| API
+    ADash -->|"Assign partner"| API
+    API -->|"Navigation link"| WBot
+    WBot -->|"📩 Maps link"| DPage
+    
+    DPage -->|"Mark delivered"| API
+    DPage -->|"Navigate"| GMaps
+
+    style WhatsApp fill:#25D366,color:#fff,stroke:none
+    style Backend fill:#6C63FF,color:#fff,stroke:none
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h2>WhatsApp Message Flow</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant App as 📱 Existing App
+    participant Server as ⚙️ Backend
+    participant WA as 💬 WhatsApp
+    participant Customer as 🧍 Customer
+    participant Admin as 🧑‍💼 Admin
+    participant Partner as 🛵 Partner
+    participant Maps as 🗺️ Google Maps
+
+    App->>Server: New order placed
+    Server->>WA: Send location link
+    WA->>Customer: "Set your delivery location 📍"
+    Customer->>Server: Opens magic link
+    Server-->>Customer: Map page (auto-auth)
+    Customer->>Server: Confirms pin location
+    Server->>WA: "Location confirmed ✅"
+    WA->>Customer: Confirmation message
+    
+    Admin->>Server: Views order + location
+    Admin->>Server: Assigns delivery partner
+    Server->>WA: Send delivery details
+    WA->>Partner: "New delivery 🚚 + Maps link"
+    Partner->>Maps: Opens navigation
+    Partner->>Server: Marks delivered
+    Server->>WA: "Order delivered ✅"
+    WA->>Customer: Delivery confirmation
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h2>API Endpoint Map</h2>
+            <div class="mermaid">
+flowchart TD
+    subgraph Orders["📦 Orders API"]
+        O1["GET /api/orders\n(List all, filter by status)"]
+        O2["GET /api/orders/:id\n(Full details + location)"]
+        O3["POST /api/orders/:id/status\n(Update status)"]
+    end
+
+    subgraph Location["📍 Location API"]
+        L1["POST /api/location\n(Save customer pin)"]
+        L2["GET /api/validate-token\n(Magic link auth)"]
+    end
+
+    subgraph Partners["🛵 Partners API"]
+        P1["GET /api/partners\n(List all partners)"]
+        P2["POST /api/assign\n(Assign to order)"]
+        P3["GET /api/partners/:id/orders\n(Partner's deliveries)"]
+        P4["POST /api/orders/:id/deliver\n(Mark delivered)"]
+    end
+
+    subgraph WA["💬 WhatsApp API"]
+        W1["POST /api/whatsapp/send-location-link\n(Send magic link)"]
+        W2["POST /api/whatsapp/send-delivery-link\n(Send maps link)"]
+        W3["GET /api/whatsapp/logs\n(View message log)"]
+    end
+
+    style Orders fill:#3B82F6,color:#fff,stroke:none
+    style Location fill:#10B981,color:#fff,stroke:none
+    style Partners fill:#6C63FF,color:#fff,stroke:none
+    style WA fill:#25D366,color:#fff,stroke:none
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h2>Data Flow — Customer Sets Location</h2>
+            <div class="mermaid">
+flowchart LR
+    A["Magic Link\norderId + token"] --> B["GET /api/validate-token\n→ Order details"]
+    B --> C["Map loads\n(Leaflet + CARTO Dark)"]
+    C --> D{"User action"}
+    D -->|"GPS Button"| E["navigator.geolocation\n.getCurrentPosition()"]
+    D -->|"Map Click"| F["Click event\n→ lat/lng"]
+    D -->|"Drag Pin"| G["Drag end\n→ lat/lng"]
+    E --> H["Nominatim API\n(Reverse Geocode)"]
+    F --> H
+    G --> H
+    H --> I["Address preview\nshown on map"]
+    I --> J["POST /api/location\n{orderId, lat, lng, address}"]
+    J --> K["Status → LOCATION_CONFIRMED\n+ WhatsApp notification"]
+    K --> L["✅ Success screen"]
+
+    style A fill:#F59E0B,color:#fff,stroke:none
+    style J fill:#6C63FF,color:#fff,stroke:none
+    style L fill:#10B981,color:#fff,stroke:none
+            </div>
+        </div>
+    </div>
+</body>
+</html>
